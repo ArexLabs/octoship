@@ -7,7 +7,7 @@ Fetch any release, tag, branch, pull request, or issue from any GitHub repositor
 ```bash
 bun add @ims/octoship
 # or
-npm install @ims/octoship
+pnpm install @ims/octoship
 ```
 
 ## Quick Start
