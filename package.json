@@ -1,17 +1,32 @@
 {
   "name": "@ims/octoship",
-  "type": "module",
   "version": "1.0.0-ALPHA",
-  "description": "Fetch any release of any GitHub Repository",
-  "repository": "https://github.com/ArexLabs/octoship",
-  "license": "Apache-2.0",
-  "homepage": "https://devflare.de",
-  "bugs": {
-    "url": "https://github.com/ArexLabs/octoship/issues"
+  "author": {
+    "email": "itzzmateo@devflare.de",
+    "name": "ItzzMateo",
+    "url": "https://github.com/itzzjustmateo"
   },
+  "repository": "https://github.com/ArexLabs/octoship",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "bin": {
+    "octoship": "./dist/cli.js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.3",
+    "@octokit/openapi-types": "^27.0.0",
+    "@types/bun": "latest",
+    "citty": "^0.2.2",
+    "husky": "^9.1.7",
+    "jiti": "^2.7.0",
+    "msw": "^2.15.0",
+    "tsup": "^8.5.1",
+    "ultracite": "7.9.4",
+    "vitest": "^4.1.10"
+  },
+  "peerDependencies": {
+    "typescript": "^7"
+  },
   "exports": {
     ".": {
       "import": {
@@ -24,39 +39,29 @@
       }
     }
   },
+  "bugs": {
+    "url": "https://github.com/ArexLabs/octoship/issues"
+  },
+  "description": "Fetch any release of any GitHub Repository",
   "files": [
     "dist"
   ],
+  "homepage": "https://devflare.de",
   "keywords": [
     "releases",
     "github",
     "octoship"
   ],
-  "author": {
-    "email": "itzzmateo@devflare.de",
-    "name": "ItzzMateo",
-    "url": "https://github.com/itzzjustmateo"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.5.3",
-    "@types/bun": "latest",
-    "husky": "^9.1.7",
-    "tsup": "^8.5.1",
-    "ultracite": "7.9.4",
-    "vitest": "^4.1.10"
-  },
-  "dependencies": {
-    "yaml": "^2.9.0"
-  },
-  "peerDependencies": {
-    "typescript": "^7"
-  },
+  "license": "Apache-2.0",
   "scripts": {
     "build": "tsup",
     "test": "vitest run",
     "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
     "check": "ultracite check",
     "fix": "ultracite fix",
     "prepare": "husky"
-  }
+  },
+  "type": "module",
+  "types": "dist/index.d.ts"
 }

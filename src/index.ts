@@ -1,136 +1,24 @@
-import { existsSync, readFileSync } from "node:fs";
-import { join } from "node:path";
-import { parse as parseYaml } from "yaml";
+import { loadConfig, type OctoshipConfig } from "./config";
+import type {
+  GitHubBranch,
+  GitHubIssue,
+  GitHubPullRequest,
+  GitHubRelease,
+  GitHubTag,
+} from "./types";
 
-// ── Types ────────────────────────────────────────────────────────────────────
-
-export interface OctoshipConfig {
-  defaultBranch?: string;
-  defaultRepository?: string;
-  perPage?: number;
-  token?: string;
-  userAgent?: string;
-}
-
-export interface GitHubRelease {
-  assets: GitHubAsset[];
-  author: GitHubUser;
-  body: string;
-  created_at: string;
-  draft: boolean;
-  html_url: string;
-  id: number;
-  name: string;
-  prerelease: boolean;
-  published_at: string;
-  tag_name: string;
-  tarball_url: string;
-  zipball_url: string;
-}
-
-export interface GitHubTag {
-  commit: {
-    sha: string;
-    url: string;
-  };
-  name: string;
-  tarball_url: string;
-  zipball_url: string;
-}
-
-export interface GitHubBranch {
-  commit: {
-    sha: string;
-    url: string;
-  };
-  name: string;
-  protected: boolean;
-}
-
-export interface GitHubPullRequest {
-  base: {
-    ref: string;
-    sha: string;
-  };
-  body: string | null;
-  created_at: string;
-  head: {
-    ref: string;
-    sha: string;
-  };
-  html_url: string;
-  id: number;
-  number: number;
-  state: "open" | "closed" | "merged";
-  title: string;
-  updated_at: string;
-  user: GitHubUser;
-}
-
-export interface GitHubIssue {
-  body: string | null;
-  created_at: string;
-  html_url: string;
-  id: number;
-  labels: GitHubLabel[];
-  number: number;
-  state: "open" | "closed";
-  title: string;
-  updated_at: string;
-  user: GitHubUser;
-}
-
-export interface GitHubUser {
-  avatar_url: string;
-  html_url: string;
-  id: number;
-  login: string;
-}
-
-export interface GitHubAsset {
-  browser_download_url: string;
-  created_at: string;
-  download_count: number;
-  id: number;
-  label: string;
-  name: string;
-  size: number;
-  state: "uploaded" | "open";
-  updated_at: string;
-}
-
-export interface GitHubLabel {
-  color: string;
-  description: string | null;
-  id: number;
-  name: string;
-}
-
-// ── Config ───────────────────────────────────────────────────────────────────
-
-let cachedConfig: OctoshipConfig | undefined;
-
-export function loadConfig(cwd?: string): OctoshipConfig {
-  if (cachedConfig) {
-    return cachedConfig;
-  }
-
-  const dir = cwd ?? process.cwd();
-  const configPath = join(dir, "octoship.yaml");
-
-  if (!existsSync(configPath)) {
-    cachedConfig = {};
-    return cachedConfig;
-  }
-
-  const raw = readFileSync(configPath, "utf-8");
-  cachedConfig = parseYaml(raw) as OctoshipConfig;
-  return cachedConfig;
-}
-
-export function resetConfig(): void {
-  cachedConfig = undefined;
-}
+export { loadConfig, type OctoshipConfig, resetConfig } from "./config";
+export { computeSha256, verifyAssetChecksum } from "./crypto";
+export type {
+  GitHubBranch,
+  GitHubIssue,
+  GitHubLabel,
+  GitHubPullRequest,
+  GitHubRelease,
+  GitHubReleaseAsset,
+  GitHubTag,
+  GitHubUser,
+} from "./types";
 
 // ── Internal Helpers ─────────────────────────────────────────────────────────
 
@@ -142,7 +30,7 @@ function resolveRepository(repositoryUrl?: string): string {
   const repo = repositoryUrl ?? resolveConfig().defaultRepository;
   if (!repo) {
     throw new Error(
-      "No repository specified. Pass a repository URL or set 'defaultRepository' in octoship.yaml."
+      "No repository specified. Pass a repository URL or set 'defaultRepository' in octoship.json."
     );
   }
   return repo;
@@ -201,7 +89,7 @@ async function githubFetch<T>(url: string): Promise<T> {
     );
   }
 
-  return response.json() as Promise<T>;
+  return (await response.json()) as T;
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
@@ -228,7 +116,11 @@ export async function fetchFirstRelease(
 ): Promise<GitHubRelease> {
   const repo = resolveRepository(repositoryUrl);
   const releases = await githubFetch<GitHubRelease[]>(
-    buildUrl(repo, "releases", { direction: "asc", page: "1", sort: "created" })
+    buildUrl(repo, "releases", {
+      direction: "asc",
+      page: "1",
+      sort: "created",
+    })
   );
 
   const [first] = releases;
@@ -271,7 +163,11 @@ export async function fetchLatestPullRequest(
 ): Promise<GitHubPullRequest> {
   const repo = resolveRepository(repositoryUrl);
   const pulls = await githubFetch<GitHubPullRequest[]>(
-    buildUrl(repo, "pulls", { direction: "desc", page: "1", sort: "created" })
+    buildUrl(repo, "pulls", {
+      direction: "desc",
+      page: "1",
+      sort: "created",
+    })
   );
 
   const [first] = pulls;
@@ -293,7 +189,11 @@ export async function fetchLatestIssue(
 ): Promise<GitHubIssue> {
   const repo = resolveRepository(repositoryUrl);
   const issues = await githubFetch<GitHubIssue[]>(
-    buildUrl(repo, "issues", { direction: "desc", page: "1", sort: "created" })
+    buildUrl(repo, "issues", {
+      direction: "desc",
+      page: "1",
+      sort: "created",
+    })
   );
 
   const [first] = issues;
