@@ -128,6 +128,10 @@ try {
 }
 ```
 
+## RoadMap
+
+1. Replace tsup with tsdown
+
 ## License
 
 [Apache-2.0](LICENSE)
